@@ -1,0 +1,26 @@
+/*
+ * Matter baseline board configuration for nRF54LM20 DK.
+ *
+ * The nRF7002-EB II shield supplies its own overlay through SHIELD=nrf7002eb2.
+ * SEN66 I2C wiring is deliberately introduced in feature/sen66-driver.
+ */
+
+#include <samples/matter/nrf54lm20_cpuapp_partitions.dtsi>
+
+/ {
+    aliases {
+        watchdog0 = &wdt31;
+    };
+
+    chosen {
+        nordic,pm-ext-flash = &mx25r64;
+    };
+};
+
+&mx25r64 {
+    status = "okay";
+};
+
+&wdt31 {
+    status = "okay";
+};

@@ -1,0 +1,52 @@
+# Building the Matter-over-Wi-Fi baseline
+
+## Prerequisites
+
+- nRF Connect SDK 3.4.0 LTS
+- nRF54LM20 DK with the `nrf7002eb2` shield attached
+- The nRF Connect SDK environment loaded in the terminal
+
+## Build command
+
+From the repository root, build the nRF54LM20A target with sysbuild:
+
+```console
+west build -p -b nrf54lm20dk/nrf54lm20a/cpuapp --sysbuild -- \
+  -DSHIELD=nrf7002eb2 \
+  -DSB_CONFIG_WIFI_NRF70=y \
+  -DCONFIG_CHIP_WIFI=y
+```
+
+`SHIELD=nrf7002eb2` selects the nRF7002-EB II hardware overlay.
+`SB_CONFIG_WIFI_NRF70=y` enables the nRF70 Wi-Fi image in sysbuild, and
+`CONFIG_CHIP_WIFI=y` selects Matter over Wi-Fi rather than Thread.
+
+## Flashing
+
+Use the **Flash** action in nRF Connect for VS Code for the configured
+sysbuild build directory. It programs the complete image set.
+
+## Baseline acceptance criteria
+
+1. The image builds without configuration or linker errors.
+2. On first boot the serial log prints a Matter onboarding payload.
+3. The device is commissionable with QR/manual onboarding to the `BUCKET`
+   hotspot.
+4. The device reconnects after reboot.
+5. NFC exposes the same Matter onboarding payload. It does not include Wi-Fi
+   credentials; the commissioner sends those during Matter commissioning.
+
+## UART logs during bring-up
+
+The `nrf7002eb2` shield routes the Zephyr console and shell to `uart30`. On the
+connected nRF54LM20-DK, open **vcom: 0** in nRF Connect Serial Terminal
+(typically `/dev/tty.usbmodem0010518039041` on this Mac) at **115200 baud, 8N1,
+no flow control**.
+
+After a valid MCUboot image starts, the baseline prints these application
+markers:
+
+- `SEN66 Matter baseline starting`
+- `Preparing Matter server`
+- `Matter server prepared`
+- `Starting Matter server`

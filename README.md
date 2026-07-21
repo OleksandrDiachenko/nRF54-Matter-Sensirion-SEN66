@@ -33,6 +33,7 @@ See [hardware wiring](docs/hardware.md) and the [roadmap](docs/roadmap.md).
 ## Documentation
 
 - [Architecture](docs/architecture.md)
+- [Building the Matter-over-Wi-Fi baseline](docs/building.md)
 - [Hardware](docs/hardware.md)
 - [Development workflow](docs/development-workflow.md)
 - [Roadmap](docs/roadmap.md)
