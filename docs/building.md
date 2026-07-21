@@ -30,3 +30,18 @@ west build -p -b nrf54lm20dk/nrf54lm20a/cpuapp --sysbuild -- \
 4. The device reconnects after reboot.
 5. NFC exposes the same Matter onboarding payload. It does not include Wi-Fi
    credentials; the commissioner sends those during Matter commissioning.
+
+## UART logs during bring-up
+
+The `nrf7002eb2` shield routes the Zephyr console and shell to `uart30`. On the
+connected nRF54LM20-DK, open **vcom: 0** in nRF Connect Serial Terminal
+(typically `/dev/tty.usbmodem0010518039041` on this Mac) at **115200 baud, 8N1,
+no flow control**.
+
+After a valid MCUboot image starts, the baseline prints these application
+markers:
+
+- `SEN66 Matter baseline starting`
+- `Preparing Matter server`
+- `Matter server prepared`
+- `Starting Matter server`

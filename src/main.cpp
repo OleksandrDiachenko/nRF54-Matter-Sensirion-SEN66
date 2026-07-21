@@ -9,6 +9,8 @@
 LOG_MODULE_REGISTER(app, CONFIG_CHIP_APP_LOG_LEVEL);
 
 int main() {
+    LOG_INF("SEN66 Matter baseline starting");
+
     const CHIP_ERROR error = AppTask::Instance().StartApp();
 
     LOG_ERR("Matter application exited: %" CHIP_ERROR_FORMAT, error.Format());

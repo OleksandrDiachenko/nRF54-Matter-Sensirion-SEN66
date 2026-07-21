@@ -17,7 +17,9 @@ LOG_MODULE_DECLARE(app, CONFIG_CHIP_APP_LOG_LEVEL);
 using namespace chip;
 
 CHIP_ERROR AppTask::Init() {
+    LOG_INF("Preparing Matter server");
     ReturnErrorOnFailure(Nrf::Matter::PrepareServer());
+    LOG_INF("Matter server prepared");
 
     if (!Nrf::GetBoard().Init()) {
         LOG_ERR("Board UI initialization failed");
@@ -27,6 +29,7 @@ CHIP_ERROR AppTask::Init() {
     ReturnErrorOnFailure(
         Nrf::Matter::RegisterEventHandler(Nrf::Board::DefaultMatterEventHandler, 0));
 
+    LOG_INF("Starting Matter server");
     return Nrf::Matter::StartServer();
 }
 
