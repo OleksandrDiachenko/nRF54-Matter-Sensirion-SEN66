@@ -21,27 +21,10 @@ west build -p -b nrf54lm20dk/nrf54lm20a/cpuapp --sysbuild -- \
 `SB_CONFIG_WIFI_NRF70=y` enables the nRF70 Wi-Fi image in sysbuild, and
 `CONFIG_CHIP_WIFI=y` selects Matter over Wi-Fi rather than Thread.
 
-## Flashing every sysbuild domain
+## Flashing
 
-This project has three independently flashable images. On NCS 3.4, `west
-flash` may prompt to choose one domain; selecting only the application does
-not update MCUboot. Flash the domains in this exact order, using the DK J-Link
-serial number (`001051803904` on this workstation):
-
-```console
-west flash -d build/nrf54lm20-wifi --domain mcuboot --no-rebuild --dev-id 001051803904
-west flash -d build/nrf54lm20-wifi --domain matter_factory_data --no-rebuild --dev-id 001051803904
-west flash -d build/nrf54lm20-wifi --domain nRF54-Matter-Sensirion-SEN66 --no-rebuild --dev-id 001051803904
-```
-
-The application must be flashed as the generated **signed** image. Never
-select `zephyr.hex` manually in a programmer: it is not a bootable MCUboot
-image. The `nRF54-Matter-Sensirion-SEN66` sysbuild domain automatically uses
-`zephyr.signed.hex`.
-
-The MCUboot overlay in `sysbuild/mcuboot/` deliberately shares the Matter
-partition layout with the application (`slot0` at `0xD000`). Keep these files
-in sync when changing partitions.
+Use the **Flash** action in nRF Connect for VS Code for the configured
+sysbuild build directory. It programs the complete image set.
 
 ## Baseline acceptance criteria
 
