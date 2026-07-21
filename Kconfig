@@ -2,6 +2,23 @@ mainmenu "SEN66 Matter Air Quality Accessory"
 
 config CHIP_WIFI
 
+config APP_SEN66
+	bool "Enable the SEN66 air-quality sensor driver"
+	default y
+	depends on I2C
+	help
+	  Build the isolated SEN66 I2C driver (transport, Sensirion CRC, and the
+	  measurement/serial-number parser). Disabling it drops the driver sources
+	  from the image without touching the Matter baseline.
+
+config APP_SEN66_SHELL
+	bool "Enable SEN66 diagnostic shell commands"
+	default y
+	depends on APP_SEN66 && SHELL
+	help
+	  Register the "sen66" shell command (serial, read) used as the M2 hardware
+	  smoke test over the Matter shell.
+
 source "$(ZEPHYR_CONNECTEDHOMEIP_MODULE_DIR)/config/nrfconnect/chip-module/Kconfig.features"
 source "$(ZEPHYR_CONNECTEDHOMEIP_MODULE_DIR)/config/nrfconnect/chip-module/Kconfig.defaults"
 source "$(ZEPHYR_NRF_MODULE_DIR)/samples/matter/common/src/Kconfig"

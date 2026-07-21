@@ -2,8 +2,13 @@
  * Matter baseline board configuration for nRF54LM20 DK.
  *
  * The nRF7002-EB II shield supplies its own overlay through SHIELD=nrf7002eb2.
- * SEN66 I2C wiring is deliberately introduced in feature/sen66-driver.
+ * SEN66 I2C wiring (feature/sen66-driver) uses i2c21: the only serial instance
+ * left free by the shield (i2c22/spi22 drives the nRF70; uart30 is the console).
+ * SDA=P1.11, SCL=P1.12 match docs/hardware.md and do not clash with the shield,
+ * which routes on ports 3 and 0.
  */
+
+#include <zephyr/dt-bindings/i2c/i2c.h>
 
 #include <samples/matter/nrf54lm20_cpuapp_partitions.dtsi>
 
@@ -23,4 +28,32 @@
 
 &wdt31 {
     status = "okay";
+};
+
+&pinctrl {
+    i2c21_default: i2c21_default {
+        group1 {
+            psels = <NRF_PSEL(TWIM_SDA, 1, 11)>, <NRF_PSEL(TWIM_SCL, 1, 12)>;
+        };
+    };
+
+    i2c21_sleep: i2c21_sleep {
+        group1 {
+            psels = <NRF_PSEL(TWIM_SDA, 1, 11)>, <NRF_PSEL(TWIM_SCL, 1, 12)>;
+            low-power-enable;
+        };
+    };
+};
+
+&i2c21 {
+    status = "okay";
+    clock-frequency = <I2C_BITRATE_STANDARD>; /* SEN6x: 100 kHz, no clock stretching */
+    pinctrl-0 = <&i2c21_default>;
+    pinctrl-1 = <&i2c21_sleep>;
+    pinctrl-names = "default", "sleep";
+
+    sen66: sen66@6b {
+        compatible = "i2c-device";
+        reg = <0x6b>;
+    };
 };

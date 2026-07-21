@@ -50,3 +50,40 @@ markers:
 - `Preparing Matter server`
 - `Matter server prepared`
 - `Starting Matter server`
+
+With the SEN66 driver present it also prints `SEN66 I2C ready ...` once the bus
+is verified (or a warning if the sensor is absent — that never blocks Matter).
+
+## SEN66 driver unit tests
+
+The Sensirion CRC and the measurement/serial parser are pure and run on the
+host with Twister:
+
+```console
+west twister -T tests/sen66 -p unit_testing
+```
+
+The pure sources use only `<stdint.h>`/`<stddef.h>`, so the parser/CRC compile
+into the host `type: unit` binary. (Zephyr `ztest` builds on Linux/CI hosts; on
+macOS the ztest section attributes are not accepted by Apple clang.)
+
+## SEN66 hardware smoke test
+
+With the firmware flashed and the sensor wired, use the Matter shell (vcom0) to
+exercise the real sensor before any Matter integration:
+
+```console
+uart:~$ sen66 serial      # prints the sensor serial number
+uart:~$ sen66 read        # prints one measurement; unavailable channels show <n/a>
+```
+
+Expected observations, confirmed on hardware:
+
+- PM4.0 and PM10 commonly equal PM2.5 indoors. The SEN66 derives these as a
+  cumulative mass over a particle-size histogram; with no coarse particles
+  (> 2.5 um) present, the larger bins add no mass. A steady PM1.0/PM2.5 ratio
+  across repeated reads while the overall level drifts (e.g. settling dust)
+  confirms this is real sensor physics, not a parser fault.
+- The NOx index commonly reads `1` for an extended period after power-up. The
+  datasheet's NOx conditioning time is long (up to a few hours); `1` is the
+  algorithm's floor value during that window, not an error.

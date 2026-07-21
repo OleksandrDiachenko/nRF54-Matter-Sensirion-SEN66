@@ -10,6 +10,10 @@
 #include "lib/core/CHIPError.h"
 #include "lib/support/CodeUtils.h"
 
+#if defined(CONFIG_APP_SEN66)
+#include "sen66/sen66_driver.h"
+#endif
+
 #include <zephyr/logging/log.h>
 
 LOG_MODULE_DECLARE(app, CONFIG_CHIP_APP_LOG_LEVEL);
@@ -25,6 +29,14 @@ CHIP_ERROR AppTask::Init() {
         LOG_ERR("Board UI initialization failed");
         return CHIP_ERROR_INCORRECT_STATE;
     }
+
+#if defined(CONFIG_APP_SEN66)
+    // Verify the sensor bus only. A missing sensor must not block Matter; polling
+    // and measurement policy are added in the measurement service (M3).
+    if (!Sen66::Init()) {
+        LOG_WRN("SEN66 sensor not detected; continuing without it");
+    }
+#endif
 
     ReturnErrorOnFailure(
         Nrf::Matter::RegisterEventHandler(Nrf::Board::DefaultMatterEventHandler, 0));

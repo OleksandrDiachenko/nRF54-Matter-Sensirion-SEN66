@@ -1,0 +1,4 @@
+tests:
+  sen66.parser:
+    tags: sen66
+    type: unit
