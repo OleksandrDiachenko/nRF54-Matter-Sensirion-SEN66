@@ -21,4 +21,18 @@ target_sources(app PRIVATE
     src/main.cpp
 )
 
+if(CONFIG_APP_SEN66)
+    target_sources(app PRIVATE
+        src/sen66/sen66_crc.cpp
+        src/sen66/sen66_protocol.cpp
+        src/sen66/sen66_driver.cpp
+    )
+endif()
+
+if(CONFIG_APP_SEN66_SHELL)
+    target_sources(app PRIVATE
+        src/sen66/sen66_shell.cpp
+    )
+endif()
+
 ncs_configure_data_model()
