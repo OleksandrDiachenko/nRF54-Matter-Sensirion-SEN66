@@ -18,7 +18,11 @@ Branch: `feature/matter-wifi-baseline`
 - Start from the Nordic Matter template.
 - Build for `nrf54lm20dk/nrf54lm20a/cpuapp` with `nrf7002eb2`.
 - Commission a sensor-free accessory to `BUCKET` using QR or manual onboarding.
-- Confirm it appears in Apple Home and reconnects after reset.
+- Confirm Wi-Fi commissioning and reconnect-after-reset with `chip-tool`.
+
+Apple Home cannot add the accessory yet: the ZAP file exposes only the Root
+Node endpoint until M4 defines the Air Quality Sensor endpoint, so there is
+nothing for Apple Home to display. Full Apple Home acceptance is M5.
 
 ## M2 — SEN66 driver
 
