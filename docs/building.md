@@ -76,3 +76,14 @@ exercise the real sensor before any Matter integration:
 uart:~$ sen66 serial      # prints the sensor serial number
 uart:~$ sen66 read        # prints one measurement; unavailable channels show <n/a>
 ```
+
+Expected observations, confirmed on hardware:
+
+- PM4.0 and PM10 commonly equal PM2.5 indoors. The SEN66 derives these as a
+  cumulative mass over a particle-size histogram; with no coarse particles
+  (> 2.5 um) present, the larger bins add no mass. A steady PM1.0/PM2.5 ratio
+  across repeated reads while the overall level drifts (e.g. settling dust)
+  confirms this is real sensor physics, not a parser fault.
+- The NOx index commonly reads `1` for an extended period after power-up. The
+  datasheet's NOx conditioning time is long (up to a few hours); `1` is the
+  algorithm's floor value during that window, not an error.
