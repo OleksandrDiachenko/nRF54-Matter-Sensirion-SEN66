@@ -1,0 +1,11 @@
+config NRF_DEFAULT_IPC_RADIO
+    default y
+
+choice BOOTLOADER
+    default BOOTLOADER_MCUBOOT if !BOARD_NRF21540DK
+endchoice
+
+config MATTER_FACTORY_DATA_GENERATE
+    default y if !BOARD_NRF21540DK
+
+source "share/sysbuild/Kconfig"
