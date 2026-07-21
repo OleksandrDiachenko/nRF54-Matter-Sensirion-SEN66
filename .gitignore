@@ -1,1 +1,7 @@
 build*/
+.vscode/
+.cache/
+*.elf
+*.hex
+*.bin
+compile_commands.json
