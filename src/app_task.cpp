@@ -47,6 +47,11 @@ CHIP_ERROR AppTask::Init() {
 #endif
 #endif
 
+    // CONFIG_APP_AIR_QUALITY_ENDPOINT's cluster registration self-registers
+    // via NRF_MATTER_CLUSTER_INIT and runs automatically from inside
+    // StartServer() below, once it is safe to do so - see
+    // air_quality_matter_adapter.h.
+
     ReturnErrorOnFailure(
         Nrf::Matter::RegisterEventHandler(Nrf::Board::DefaultMatterEventHandler, 0));
 
