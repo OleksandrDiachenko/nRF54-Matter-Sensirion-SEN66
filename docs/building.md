@@ -67,6 +67,17 @@ The pure sources use only `<stdint.h>`/`<stddef.h>`, so the parser/CRC compile
 into the host `type: unit` binary. (Zephyr `ztest` builds on Linux/CI hosts; on
 macOS the ztest section attributes are not accepted by Apple clang.)
 
+## Measurement service unit tests
+
+The poll/retry/backoff/notify policy (`src/measurement_service/`) is pure and
+runs the same way:
+
+```console
+west twister -T tests/measurement_service -p unit_testing
+```
+
+See [measurement-service.md](measurement-service.md) for what it covers.
+
 ## SEN66 hardware smoke test
 
 With the firmware flashed and the sensor wired, use the Matter shell (vcom0) to
@@ -75,7 +86,15 @@ exercise the real sensor before any Matter integration:
 ```console
 uart:~$ sen66 serial      # prints the sensor serial number
 uart:~$ sen66 read        # prints one measurement; unavailable channels show <n/a>
+uart:~$ sen66 latest      # prints the measurement service's latest snapshot (non-blocking)
 ```
+
+`sen66 latest` reads the measurement service's snapshot instead of issuing a
+fresh I2C transaction, so it also reflects in-progress backoff or recovery.
+To exercise M3's recovery path on hardware: run `sen66 latest` a few times a
+second while physically disconnecting the sensor's I2C lines or power, watch
+the age climb and warning logs appear, then reconnect and confirm it recovers
+on its own (no reboot) within a few backoff cycles.
 
 Expected observations, confirmed on hardware:
 

@@ -30,6 +30,17 @@ Commands used: `0x0021` start measurement, `0x0104` stop, `0x0202` get data
 ready, `0x0300` read measured values, `0xD033` get serial number,
 `0xD304` device reset.
 
+Every public entry point (except `Init()`, which never touches the bus) locks
+a driver-owned mutex for its whole command/response exchange. Since the
+measurement service (M3) polls continuously from its own thread while the
+diagnostic shell can call the driver at the same time, without this lock one
+caller's command could land on the sensor mid-exchange for another caller and
+desync the protocol - even though each individual I2C transaction is itself
+atomic. The lock is per call, not held across a caller's whole multi-step
+sequence (e.g. the shell's data-ready poll loop), so it only guarantees
+byte-level protocol integrity, not that two callers never observe the sensor
+mid-restart.
+
 ## Sensirion CRC
 
 Every 2-byte word is followed by a CRC byte: CRC-8, polynomial `0x31`, initial

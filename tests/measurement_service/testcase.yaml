@@ -1,0 +1,4 @@
+tests:
+  measurement_service.policy:
+    tags: measurement_service
+    type: unit

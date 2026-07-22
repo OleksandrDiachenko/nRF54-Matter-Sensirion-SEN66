@@ -29,6 +29,13 @@ if(CONFIG_APP_SEN66)
     )
 endif()
 
+if(CONFIG_APP_MEASUREMENT_SERVICE)
+    target_sources(app PRIVATE
+        src/measurement_service/measurement_policy.cpp
+        src/measurement_service/measurement_service.cpp
+    )
+endif()
+
 if(CONFIG_APP_SEN66_SHELL)
     target_sources(app PRIVATE
         src/sen66/sen66_shell.cpp

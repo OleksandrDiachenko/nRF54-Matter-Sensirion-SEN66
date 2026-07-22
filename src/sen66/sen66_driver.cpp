@@ -22,6 +22,24 @@ namespace {
 const struct i2c_dt_spec kDev = I2C_DT_SPEC_GET(DT_NODELABEL(sen66));
 
 /*
+ * Serializes every public entry point below. Two independent callers now
+ * exist on this bus - the diagnostic shell (sen66 read/serial) and the
+ * measurement service's poll thread - and a command/response exchange spans
+ * a write, a delay, and a read. Without this, one caller's command can land
+ * on the sensor in the middle of another caller's exchange, desyncing the
+ * protocol even though each individual I2C transaction is itself atomic.
+ */
+K_MUTEX_DEFINE(kBusMutex);
+
+class BusLock {
+  public:
+    BusLock() { k_mutex_lock(&kBusMutex, K_FOREVER); }
+    ~BusLock() { k_mutex_unlock(&kBusMutex); }
+    BusLock(const BusLock &) = delete;
+    BusLock &operator=(const BusLock &) = delete;
+};
+
+/*
  * SEN6x commands need no clock stretching: the master issues the command, waits
  * the execution time, then reads. Values are the datasheet maxima with margin.
  */
@@ -51,6 +69,7 @@ bool Init() {
 }
 
 int ReadSerialNumber(char out[kSerialChars]) {
+    BusLock lock;
     int err = SendCommand(Command::GetSerialNumber);
     if (err) {
         return err;
@@ -71,6 +90,7 @@ int ReadSerialNumber(char out[kSerialChars]) {
 }
 
 int StartMeasurement() {
+    BusLock lock;
     int err = SendCommand(Command::StartMeasurement);
     if (err) {
         return err;
@@ -80,6 +100,7 @@ int StartMeasurement() {
 }
 
 int StopMeasurement() {
+    BusLock lock;
     int err = SendCommand(Command::StopMeasurement);
     if (err) {
         return err;
@@ -89,6 +110,7 @@ int StopMeasurement() {
 }
 
 bool IsDataReady() {
+    BusLock lock;
     if (SendCommand(Command::GetDataReady) != 0) {
         return false;
     }
@@ -108,6 +130,7 @@ bool IsDataReady() {
 }
 
 int ReadMeasurement(Measurement &out) {
+    BusLock lock;
     int err = SendCommand(Command::ReadMeasuredValues);
     if (err) {
         return err;
