@@ -90,6 +90,12 @@ west twister -T tests/air_quality_endpoint -p unit_testing
 See [air-quality-policy.md](air-quality-policy.md) for the cited thresholds
 it verifies.
 
+## Factory reset
+
+Hold Button 1 for ~6 s to erase the fabric, Wi-Fi credentials, and all
+settings. See [factory-reset.md](factory-reset.md) for the verified
+acceptance criteria and results.
+
 ## SEN66 hardware smoke test
 
 With the firmware flashed and the sensor wired, use the Matter shell (vcom0) to
