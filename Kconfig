@@ -16,8 +16,26 @@ config APP_SEN66_SHELL
 	default y
 	depends on APP_SEN66 && SHELL
 	help
-	  Register the "sen66" shell command (serial, read) used as the M2 hardware
-	  smoke test over the Matter shell.
+	  Register the "sen66" shell command (serial, read, latest) used as the
+	  M2/M3 hardware smoke test over the Matter shell.
+
+config APP_MEASUREMENT_SERVICE
+	bool "Enable the SEN66 measurement service"
+	default y
+	depends on APP_SEN66
+	help
+	  Poll the SEN66 on a dedicated work queue roughly once a second,
+	  retry/recover from I2C and CRC errors, and expose a thread-safe
+	  latest-measurement snapshot for later Matter integration.
+
+config APP_MEASUREMENT_SERVICE_STACK_SIZE
+	int "Measurement service work-queue stack size"
+	default 2048
+	depends on APP_MEASUREMENT_SERVICE
+	help
+	  Stack size for the dedicated work-queue thread that polls the SEN66
+	  driver. The driver performs blocking I2C calls and logging on this
+	  thread, so it needs headroom beyond a minimal work queue.
 
 source "$(ZEPHYR_CONNECTEDHOMEIP_MODULE_DIR)/config/nrfconnect/chip-module/Kconfig.features"
 source "$(ZEPHYR_CONNECTEDHOMEIP_MODULE_DIR)/config/nrfconnect/chip-module/Kconfig.defaults"

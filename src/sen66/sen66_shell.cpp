@@ -5,14 +5,19 @@
 #include "sen66_driver.h"
 #include "sen66_protocol.h"
 
+#if defined(CONFIG_APP_MEASUREMENT_SERVICE)
+#include "measurement_service/measurement_service.h"
+#endif
+
 #include <zephyr/kernel.h>
 #include <zephyr/shell/shell.h>
 
 /*
- * Diagnostic "sen66" shell command used as the M2 hardware smoke test. It
- * exercises the driver against the real sensor without any Matter integration
- * (that arrives in M4). Values print in human units; a channel whose validity
- * bit is clear prints "<n/a>" rather than a misleading zero.
+ * Diagnostic "sen66" shell command used as the M2/M3 hardware smoke test. It
+ * exercises the driver and measurement service against the real sensor
+ * without any Matter integration (that arrives in M4). Values print in human
+ * units; a channel whose validity bit is clear prints "<n/a>" rather than a
+ * misleading zero.
  */
 
 namespace {
@@ -145,11 +150,43 @@ int CmdRead(const struct shell *sh, size_t argc, char **argv) {
     return 0;
 }
 
+#if defined(CONFIG_APP_MEASUREMENT_SERVICE)
+int CmdLatest(const struct shell *sh, size_t argc, char **argv) {
+    ARG_UNUSED(argc);
+    ARG_UNUSED(argv);
+
+    // Non-blocking: reads the measurement service's mutex-guarded snapshot
+    // instead of issuing a fresh I2C transaction, so this also reflects
+    // in-progress backoff/recovery after an I2C error or a disconnected
+    // sensor.
+    MeasurementService::Snapshot snapshot;
+    if (!MeasurementService::GetLatest(snapshot)) {
+        shell_warn(sh, "SEN66: no measurement yet (still starting up?)");
+        return -EAGAIN;
+    }
+
+    shell_print(sh, "SEN66 latest (age %lld ms):", static_cast<long long>(snapshot.ageMs));
+    PrintMeasurement(sh, snapshot.measurement);
+    return 0;
+}
+#endif
+
 } // namespace
 
+#if defined(CONFIG_APP_MEASUREMENT_SERVICE)
+SHELL_STATIC_SUBCMD_SET_CREATE(sen66_cmds,
+                               SHELL_CMD(serial, NULL, "Read the SEN66 serial number", CmdSerial),
+                               SHELL_CMD(read, NULL, "Read one SEN66 measurement", CmdRead),
+                               SHELL_CMD(latest, NULL,
+                                         "Print the measurement service's latest snapshot "
+                                         "(non-blocking)",
+                                         CmdLatest),
+                               SHELL_SUBCMD_SET_END);
+#else
 SHELL_STATIC_SUBCMD_SET_CREATE(sen66_cmds,
                                SHELL_CMD(serial, NULL, "Read the SEN66 serial number", CmdSerial),
                                SHELL_CMD(read, NULL, "Read one SEN66 measurement", CmdRead),
                                SHELL_SUBCMD_SET_END);
+#endif
 
 SHELL_CMD_REGISTER(sen66, &sen66_cmds, "SEN66 air-quality sensor diagnostics", NULL);

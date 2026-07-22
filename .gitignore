@@ -5,3 +5,5 @@ build*/
 *.hex
 *.bin
 compile_commands.json
+twister-out/
+.DS_Store

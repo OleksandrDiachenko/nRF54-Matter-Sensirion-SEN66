@@ -14,6 +14,10 @@
 #include "sen66/sen66_driver.h"
 #endif
 
+#if defined(CONFIG_APP_MEASUREMENT_SERVICE)
+#include "measurement_service/measurement_service.h"
+#endif
+
 #include <zephyr/logging/log.h>
 
 LOG_MODULE_DECLARE(app, CONFIG_CHIP_APP_LOG_LEVEL);
@@ -31,11 +35,16 @@ CHIP_ERROR AppTask::Init() {
     }
 
 #if defined(CONFIG_APP_SEN66)
-    // Verify the sensor bus only. A missing sensor must not block Matter; polling
-    // and measurement policy are added in the measurement service (M3).
+    // A missing sensor bus must not block Matter. The measurement service
+    // owns runtime polling, retry, and recovery once the bus is ready.
     if (!Sen66::Init()) {
         LOG_WRN("SEN66 sensor not detected; continuing without it");
     }
+#if defined(CONFIG_APP_MEASUREMENT_SERVICE)
+    else if (!MeasurementService::Init()) {
+        LOG_ERR("SEN66 measurement service failed to start");
+    }
+#endif
 #endif
 
     ReturnErrorOnFailure(
