@@ -14,7 +14,8 @@ short-lived branch such as `feature/sen66-driver` or
 4. Commit using Conventional Commits, for example
    `feat(sen66): add measurement frame parser`.
 5. Push the branch and open a draft pull request targeting `main`.
-6. Review the diff and checks, then squash-merge it into `main`.
+6. Review the diff and checks, including [CI](ci.md), then squash-merge it
+   into `main`.
 7. Delete the merged feature branch.
 
 ## Definition of done

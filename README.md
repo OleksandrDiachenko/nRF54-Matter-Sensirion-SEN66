@@ -1,5 +1,7 @@
 # nRF54 Matter Sensirion SEN66
 
+[![CI](https://github.com/OleksandrDiachenko/nRF54-Matter-Sensirion-SEN66/actions/workflows/ci.yml/badge.svg)](https://github.com/OleksandrDiachenko/nRF54-Matter-Sensirion-SEN66/actions/workflows/ci.yml)
+
 A Matter air-quality accessory built with nRF Connect SDK for the nRF54LM20 DK,
 nRF7002-EB II Wi-Fi shield, and Sensirion SEN66 sensor.
 
@@ -36,4 +38,5 @@ See [hardware wiring](docs/hardware.md) and the [roadmap](docs/roadmap.md).
 - [Building the Matter-over-Wi-Fi baseline](docs/building.md)
 - [Hardware](docs/hardware.md)
 - [Development workflow](docs/development-workflow.md)
+- [Continuous integration](docs/ci.md)
 - [Roadmap](docs/roadmap.md)
