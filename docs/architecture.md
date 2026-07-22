@@ -35,12 +35,29 @@ Endpoint 1 uses the Matter Air Quality Sensor device type
 | PM10 | PM10 Concentration Measurement | µg/m³ |
 | Overall air quality | Air Quality | Matter enum |
 
-Plus the mandatory Descriptor and Identify clusters. PM4.0 has no matching
-standard Matter cluster. SEN66 VOC and NOx values are indexes, not TVOC or
-NO2 concentrations; they must not be published in those concentration
-clusters. They may inform the documented overall-air-quality policy in a
-later milestone - see [air-quality-policy.md](air-quality-policy.md) for the
-policy actually implemented in M4.
+Endpoint 2 uses the Matter Temperature Sensor device type (`MA-tempsensor`,
+`0x0302`), with its own Identify, Descriptor, and Temperature Measurement
+clusters - it republishes the same reading endpoint 1 already carries. This
+exists purely because Apple Home's Air Quality Sensor device type UI renders
+no tile at all for a Temperature Measurement cluster on that device type
+(confirmed on hardware, see [apple-home.md](apple-home.md)); a standalone
+Temperature Sensor endpoint is the only way to get a native Home tile for
+it - confirmed working on hardware after re-commissioning.
+
+Plus the mandatory Descriptor and Identify clusters on endpoint 1. PM4.0 has
+no matching standard Matter cluster at all, so it is not published anywhere.
+
+SEN66's VOC and NOx values are indexes, not TVOC or NO2 concentrations, and
+are not published to Matter at all - no Matter `MeasurementUnit` honestly
+describes an index, and mapping them onto the closest available clusters
+(`TotalVolatileOrganicCompoundsConcentrationMeasurement`,
+`NitrogenDioxideConcentrationMeasurement` via its `LevelIndication` feature)
+was tried and reverted: Apple Home's UI did not render a tile for either
+regardless, so publishing them added complexity without the payoff this
+project cares about (a Home-visible reading). They remain readable only via
+`sen66 latest`/`sen66 read` (see [sen66-driver.md](sen66-driver.md)) and are
+excluded from the CO2/PM2.5/PM10 air-quality policy below for the same
+reason - see [air-quality-policy.md](air-quality-policy.md).
 
 Two attribute-storage patterns are in play, matching how each cluster is
 implemented in the CHIP SDK:
@@ -56,8 +73,9 @@ implemented in the CHIP SDK:
   thresholds, peak, or average statistics, so those optional features stay
   off rather than publishing fabricated data.
 
-`src/air_quality_endpoint/air_quality_matter_adapter.cpp` owns both kinds of
-instance and is the only code that calls into either.
+`src/air_quality_endpoint/air_quality_matter_adapter.cpp` owns every
+instance across both endpoints and is the only code that calls into any of
+them.
 
 ## Transport and commissioning
 

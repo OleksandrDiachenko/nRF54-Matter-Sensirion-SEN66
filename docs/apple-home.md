@@ -106,23 +106,38 @@ visible value against `sen66 latest` or a
 
 | Matter cluster | Native Home tile? | Observed value |
 | --- | --- | --- |
-| Temperature Measurement | No - absent from the accessory detail view entirely | n/a |
+| Temperature Measurement (endpoint 1) | No - absent from the accessory detail view entirely | n/a |
 | Relative Humidity Measurement | Yes - "Current Relative Humidity" | 59% (not cross-checked against `sen66 latest` in this pass) |
 | Carbon Dioxide Concentration Measurement | Yes - "Carbon dioxide Level" | 1,621 ppm (not cross-checked against `sen66 latest` in this pass) |
 | PM1 Concentration Measurement | No - absent from the accessory detail view entirely | n/a |
 | PM2.5 Concentration Measurement | Yes - "PM2.5 Density" | 13 ug/m3 (not cross-checked against `sen66 latest` in this pass) |
 | PM10 Concentration Measurement | Yes - "PM10 Density" | 17 ug/m3 (not cross-checked against `sen66 latest` in this pass) |
 | Air Quality | Yes - accessory subtitle and its own row ("Poor") | n/a (categorical) |
+| Temperature Measurement (endpoint 2, dedicated Temperature Sensor device type) | Yes - confirmed on hardware after re-commissioning | n/a (not cross-checked against `sen66 latest` in this pass) |
 
 Observed on the accessory detail screen ("Living Room Matter Accessory"):
 Air Quality, PM2.5 Density, PM10 Density, Carbon dioxide Level, Current
-Relative Humidity. Temperature Measurement and PM1 Concentration
-Measurement are published by the endpoint (see
+Relative Humidity. Temperature Measurement (endpoint 1) and PM1
+Concentration Measurement are published by the endpoint (see
 [architecture.md](architecture.md)) but the Home app does not surface a
 tile or detail row for either - not a bug in this firmware, just what the
 current Home app's Air Quality Sensor device type UI renders.
 
 iOS/Home app version not recorded for this pass.
+
+**Endpoint 2 (standalone Temperature Sensor device type)** was added after
+this pass specifically to work around the Temperature Measurement gap above
+- see [architecture.md](architecture.md). Confirmed on hardware: after
+re-commissioning, Home renders a native temperature tile for it, unlike
+endpoint 1's copy of the same cluster.
+
+VOC/NOx were also tried as `LevelIndication`-only Concentration Measurement
+clusters (see git history) but reverted: Home rendered no tile for either
+even after endpoint 2 above proved Home had picked up the new firmware's
+data model, so the most likely explanation is Home's bridge has no mapping
+for a Concentration Measurement cluster that exposes only `LevelValue` (no
+`MeasuredValue`). Not re-attempted since - SEN66's VOC/NOx indexes stay
+off Matter entirely, readable only via `sen66 latest`/`sen66 read`.
 
 ## Resilience
 

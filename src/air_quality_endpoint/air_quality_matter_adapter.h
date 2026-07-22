@@ -7,8 +7,10 @@
 /*
  * Registers endpoint 1's Identify, Air Quality, Temperature Measurement,
  * Relative Humidity Measurement, and CO2/PM1/PM2.5/PM10 Concentration
- * Measurement clusters, and subscribes to the measurement service so it can
- * keep them in sync.
+ * Measurement clusters, plus endpoint 2's Identify and Temperature
+ * Measurement (a dedicated Temperature Sensor device type, for Apple Home -
+ * see docs/apple-home.md), and subscribes to the measurement service so it
+ * can keep them in sync.
  *
  * This module self-registers via NRF_MATTER_CLUSTER_INIT (see
  * air_quality_matter_adapter.cpp and

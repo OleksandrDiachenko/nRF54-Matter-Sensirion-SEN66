@@ -196,6 +196,12 @@ chip-tool pm25concentrationmeasurement read measured-value <node-id> 1
 chip-tool pm10concentrationmeasurement read measured-value <node-id> 1
 chip-tool airquality read air-quality <node-id> 1
 chip-tool airquality read feature-map <node-id> 1   # expect Fair|Moderate|VeryPoor|ExtremelyPoor set
+
+# Endpoint 2: standalone Temperature Sensor device type (Apple Home tile
+# workaround - see apple-home.md). Same reading as endpoint 1's Temperature
+# Measurement cluster.
+chip-tool descriptor read server-list <node-id> 2
+chip-tool temperaturemeasurement read measured-value <node-id> 2
 ```
 
 **3. Null-on-invalid check:** physically disconnect the SEN66 (as in the

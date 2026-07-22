@@ -32,6 +32,18 @@ using namespace chip::app::Clusters;
 constexpr EndpointId kEndpointId = 1;
 
 /*
+ * Endpoint 2 duplicates Temperature Measurement under the dedicated Matter
+ * Temperature Sensor device type (0x0302). Apple Home's Air Quality Sensor
+ * device type UI does not render a Temperature Measurement tile at all (see
+ * docs/apple-home.md); a standalone Temperature Sensor endpoint is the only
+ * way to get a native Home tile for this reading. Endpoint 1 keeps its own
+ * Temperature Measurement cluster too - it is still valid per the Air
+ * Quality Sensor device type's optional cluster list and other ecosystems
+ * may read it from there.
+ */
+constexpr EndpointId kTemperatureEndpointId = 2;
+
+/*
  * NumericMeasurement only: SEN66 provides no level thresholds, peak, or
  * average statistics, so those Concentration Measurement cluster features
  * stay off - see docs/architecture.md.
@@ -39,6 +51,7 @@ constexpr EndpointId kEndpointId = 1;
 using ConcentrationInstance = ConcentrationMeasurement::Instance<true, false, false, false, false, false>;
 
 Nrf::Matter::IdentifyCluster sIdentifyCluster(kEndpointId);
+Nrf::Matter::IdentifyCluster sTemperatureIdentifyCluster(kTemperatureEndpointId);
 
 AirQuality::Instance sAirQualityInstance(
     kEndpointId, BitMask<AirQuality::Feature>(AirQuality::Feature::kFair, AirQuality::Feature::kModerate,
@@ -75,10 +88,12 @@ void ApplyLatestMeasurement(intptr_t /* unused */) {
     // A cleared valid bit is never read as a value (see sen66_protocol.h) -
     // it is published as Matter-null instead of a stale or zero reading.
     if (m.valid & Sen66::kFieldTemperature) {
-        TemperatureMeasurement::Attributes::MeasuredValue::Set(kEndpointId,
-                                                                TemperatureRawToMatterCentiDegC(m.temperature));
+        int16_t centiDegC = TemperatureRawToMatterCentiDegC(m.temperature);
+        TemperatureMeasurement::Attributes::MeasuredValue::Set(kEndpointId, centiDegC);
+        TemperatureMeasurement::Attributes::MeasuredValue::Set(kTemperatureEndpointId, centiDegC);
     } else {
         TemperatureMeasurement::Attributes::MeasuredValue::SetNull(kEndpointId);
+        TemperatureMeasurement::Attributes::MeasuredValue::SetNull(kTemperatureEndpointId);
     }
 
     if (m.valid & Sen66::kFieldHumidity) {
@@ -133,6 +148,10 @@ void OnMeasurementUpdated(const Sen66::Measurement & /* snapshot */, uint16_t /*
 bool ClusterInit() {
     if (sIdentifyCluster.Init() != CHIP_NO_ERROR) {
         LOG_ERR("Failed to register Identify cluster on endpoint %u", kEndpointId);
+        return false;
+    }
+    if (sTemperatureIdentifyCluster.Init() != CHIP_NO_ERROR) {
+        LOG_ERR("Failed to register Identify cluster on endpoint %u", kTemperatureEndpointId);
         return false;
     }
     if (sAirQualityInstance.Init() != CHIP_NO_ERROR) {

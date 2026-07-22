@@ -16,9 +16,8 @@ channels the roadmap names for M4. Two channels are deliberately excluded:
   in would mean inventing thresholds instead of citing them.
 - **VOC index and NOx index** are Sensirion's proprietary index scale (not a
   TVOC or NO2 concentration - see [architecture.md](architecture.md)), so they
-  cannot be run through a concentration-based standard. They may inform this
-  policy in a later milestone once a defensible mapping from "index" to
-  "category" exists.
+  cannot be run through a concentration-based standard, and are not published
+  to Matter at all (see architecture.md for why).
 
 ## Source, code location
 
