@@ -8,8 +8,12 @@ SEN66 measurements to Matter controllers, including Apple Home.
 
 ## Project status
 
-The project is in the bootstrap phase. The first implementation milestone is a
-commissionable Matter-over-Wi-Fi baseline before integrating the sensor.
+The accessory is feature-complete and verified on hardware: Matter-over-Wi-Fi
+commissioning, the SEN66 driver and measurement service, the Matter
+air-quality endpoint, Apple Home acceptance, NFC onboarding, and factory
+reset (M1-M6, plus part of M7) are all done. Remaining M7 work is CI
+(in review), diagnostics, DFU planning, and version tags - see the
+[roadmap](docs/roadmap.md).
 
 ## Hardware
 
