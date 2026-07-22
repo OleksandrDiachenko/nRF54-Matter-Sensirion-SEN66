@@ -21,8 +21,9 @@ attributes and runs those writes in the Matter stack context.
 
 ## Matter data model
 
-The endpoint uses the Matter Air Quality Sensor device type. Initial standard
-clusters are:
+Endpoint 1 uses the Matter Air Quality Sensor device type
+(`MA-air-quality-sensor`, `0x002C`), defined in
+`src/default_zap/air_quality_sensor.zap`. Clusters:
 
 | SEN66 measurement | Matter cluster | Unit |
 | --- | --- | --- |
@@ -34,10 +35,29 @@ clusters are:
 | PM10 | PM10 Concentration Measurement | µg/m³ |
 | Overall air quality | Air Quality | Matter enum |
 
-PM4.0 has no matching standard Matter cluster. SEN66 VOC and NOx values are
-indexes, not TVOC or NO2 concentrations; they must not be published in those
-concentration clusters. They may inform the documented overall-air-quality
-policy in a later milestone.
+Plus the mandatory Descriptor and Identify clusters. PM4.0 has no matching
+standard Matter cluster. SEN66 VOC and NOx values are indexes, not TVOC or
+NO2 concentrations; they must not be published in those concentration
+clusters. They may inform the documented overall-air-quality policy in a
+later milestone - see [air-quality-policy.md](air-quality-policy.md) for the
+policy actually implemented in M4.
+
+Two attribute-storage patterns are in play, matching how each cluster is
+implemented in the CHIP SDK:
+
+- **Temperature Measurement / Relative Humidity Measurement** are plain
+  ember RAM-backed attributes, written with the generated
+  `Attributes::MeasuredValue::Set()`/`SetNull()` accessors.
+- **Air Quality and every Concentration Measurement cluster** are code-driven
+  `AttributeAccessInterface` instances (`AirQuality::Instance`,
+  `ConcentrationMeasurement::Instance<...>`), written with
+  `UpdateAirQuality()`/`SetMeasuredValue()`. Only the `NumericMeasurement`
+  feature is enabled on the concentration clusters - SEN66 provides no level
+  thresholds, peak, or average statistics, so those optional features stay
+  off rather than publishing fabricated data.
+
+`src/air_quality_endpoint/air_quality_matter_adapter.cpp` owns both kinds of
+instance and is the only code that calls into either.
 
 ## Transport and commissioning
 

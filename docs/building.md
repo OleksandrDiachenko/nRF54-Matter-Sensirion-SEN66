@@ -78,6 +78,18 @@ west twister -T tests/measurement_service -p unit_testing
 
 See [measurement-service.md](measurement-service.md) for what it covers.
 
+## Air-quality policy unit tests
+
+The overall Air Quality classification (`src/air_quality_endpoint/`) is pure
+and runs the same way:
+
+```console
+west twister -T tests/air_quality_endpoint -p unit_testing
+```
+
+See [air-quality-policy.md](air-quality-policy.md) for the cited thresholds
+it verifies.
+
 ## SEN66 hardware smoke test
 
 With the firmware flashed and the sensor wired, use the Matter shell (vcom0) to
@@ -106,3 +118,108 @@ Expected observations, confirmed on hardware:
 - The NOx index commonly reads `1` for an extended period after power-up. The
   datasheet's NOx conditioning time is long (up to a few hours); `1` is the
   algorithm's floor value during that window, not an error.
+
+## Regenerating the ZAP endpoint
+
+`src/default_zap/air_quality_sensor.zap` is the single source of truth for
+the Matter data model; `air_quality_sensor.matter` and everything under
+`zap-generated/` are derived files that must be regenerated and committed
+together whenever the `.zap` file changes - the build does **not** regenerate
+them (`ncs_configure_data_model()` passes `BYPASS_IDL`, so
+`src/default_zap/zap-generated/*` is read as-is at build time).
+
+Regeneration needs the ZAP CLI tool (a separate download from the NCS
+toolchain; version pinned by `modules/lib/matter/scripts/setup/zap.json`),
+available headless with no Electron GUI required:
+
+```console
+# Once: download the pinned zap-cli build referenced by zap.json and
+# point ZAP_INSTALL_PATH at it (see scripts/tools/zap/zap_download.py for
+# the exact release URL logic).
+export ZAP_INSTALL_PATH=/path/to/extracted/zap-cli
+
+NCS_MATTER=/opt/nordic/ncs/v3.4.0/modules/lib/matter
+
+# 1. Regenerate zap-generated/*.h/*.cpp.
+python3 "$NCS_MATTER/scripts/tools/zap/generate.py" \
+  --no-prettify-output \
+  --templates "$NCS_MATTER/src/app/zap-templates/app-templates.json" \
+  --output-dir src/default_zap/zap-generated \
+  --zcl "$NCS_MATTER/src/app/zap-templates/zcl/zcl.json" \
+  --parallel \
+  "$(pwd)/src/default_zap/air_quality_sensor.zap"
+
+# 2. Regenerate the human-readable .matter IDL export.
+python3 "$NCS_MATTER/scripts/tools/zap/generate.py" \
+  --output-dir /tmp/zap-matter-out \
+  --zcl "$NCS_MATTER/src/app/zap-templates/zcl/zcl.json" \
+  --matter-file-name "$(pwd)/src/default_zap/air_quality_sensor.matter" \
+  "$(pwd)/src/default_zap/air_quality_sensor.zap"
+```
+
+The `--zcl` flag is required: `generate.py`'s ZCL-path autodetection resolves
+the `.zap` file's embedded `pathRelativity: relativeToZap` package entry
+assuming a full west workspace layout several directories deeper than this
+freestanding app actually lives, so autodetection resolves to a nonexistent
+path here. `--matter-file-name` must point at an *existing* file (it is
+overwritten in place); it cannot create a new one.
+
+Commit `air_quality_sensor.zap`, the regenerated `air_quality_sensor.matter`,
+and every file under `zap-generated/` together as one change.
+
+## Matter air-quality endpoint verification (chip-tool)
+
+With the device commissioned (see [architecture.md](architecture.md) for the
+Wi-Fi/NFC commissioning flow) and its SEN66 wired up, verify endpoint 1 with
+`chip-tool` against a real reading - cross-check numeric values with a
+concurrent `sen66 latest` shell read, allowing for the ~7 s notify cadence
+documented in [measurement-service.md](measurement-service.md).
+
+**1. Endpoint sanity:**
+
+```console
+chip-tool descriptor read server-list <node-id> 1
+```
+
+Confirms the cluster list matches `air_quality_sensor.zap`.
+
+**2. Per-attribute reads:**
+
+```console
+chip-tool temperaturemeasurement read measured-value <node-id> 1
+chip-tool relativehumiditymeasurement read measured-value <node-id> 1
+chip-tool carbondioxideconcentrationmeasurement read measured-value <node-id> 1
+chip-tool carbondioxideconcentrationmeasurement read measurement-medium <node-id> 1   # expect Air
+chip-tool carbondioxideconcentrationmeasurement read measurement-unit <node-id> 1     # expect Ppm
+chip-tool pm1concentrationmeasurement read measured-value <node-id> 1
+chip-tool pm25concentrationmeasurement read measured-value <node-id> 1
+chip-tool pm10concentrationmeasurement read measured-value <node-id> 1
+chip-tool airquality read air-quality <node-id> 1
+chip-tool airquality read feature-map <node-id> 1   # expect Fair|Moderate|VeryPoor|ExtremelyPoor set
+```
+
+**3. Null-on-invalid check:** physically disconnect the SEN66 (as in the
+hardware smoke test above), wait for the age to climb, then re-read each
+`measured-value`. Every disconnected channel must read back Matter-null, not
+`0` or a frozen stale value.
+
+**4. Reporting/subscription check** (a passing read does not prove reporting
+works):
+
+```console
+chip-tool pm25concentrationmeasurement subscribe measured-value 1 10 <node-id> 1
+chip-tool airquality subscribe air-quality 1 10 <node-id> 1
+chip-tool temperaturemeasurement subscribe measured-value 1 10 <node-id> 1
+```
+
+For each: confirm an immediate initial report, a new report when the real
+reading changes (e.g. breathe near the sensor for CO2/PM), and a periodic
+report even without a change (proves the subscription itself is alive,
+independent of the measurement service's own ~7 s notify heartbeat). Running
+this against one `AttributeAccessInterface`-backed cluster
+(`pm25concentrationmeasurement`, `airquality`) and one plain-ember cluster
+(`temperaturemeasurement`) covers both attribute-storage code paths in
+`air_quality_matter_adapter.cpp`.
+
+Record one full expected-vs-observed pass (values and a log excerpt) as part
+of the change's definition of done.

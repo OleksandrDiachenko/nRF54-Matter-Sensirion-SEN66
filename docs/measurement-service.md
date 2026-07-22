@@ -1,9 +1,11 @@
 # Measurement service
 
 The measurement service (milestone M3) is the layer between the SEN66 driver
-and the future Matter endpoint (M4). It polls the sensor, survives I2C/CRC
-errors and a disconnected sensor, and exposes a typed, thread-safe latest
-measurement. It does not touch Matter: no ZAP endpoint exists until M4.
+and the Matter endpoint (M4, see [air-quality-policy.md](air-quality-policy.md)
+and `src/air_quality_endpoint/`). It polls the sensor, survives I2C/CRC errors
+and a disconnected sensor, and exposes a typed, thread-safe latest
+measurement. It does not touch Matter itself - see "Notify policy" below for
+how the Matter adapter consumes it instead.
 
 ## Modules
 
@@ -66,17 +68,18 @@ blocks, so it is safe to call from any thread - the shell, and later the
 Matter adapter. As with the driver, a cleared `valid` bit must never be read
 as a value.
 
-## Notify policy (for M4)
+## Notify policy
 
-The service also decides when an update is worth publishing, so the future
-Matter adapter does not have to duplicate that logic: an `UpdateCallback`
-fires from the work-queue thread when either a channel changes by more than
-its configured threshold, a channel's validity flips, or roughly 5-10 s
-(default 7 s) have passed since the last notification (a heartbeat with
+The service also decides when an update is worth publishing, so the Matter
+adapter does not have to duplicate that logic: an `UpdateCallback` fires from
+the work-queue thread when either a channel changes by more than its
+configured threshold, a channel's validity flips, or roughly 5-10 s (default
+7 s) have passed since the last notification (a heartbeat with
 `changedMask == 0`). The callback runs on the measurement service's own
-thread; the Matter adapter that registers it must marshal its own attribute
-writes onto the CHIP thread itself (for example via
-`PlatformMgr().ScheduleWork()`), per the architecture boundary in
+thread; `src/air_quality_endpoint/air_quality_matter_adapter.cpp` (M4) is the
+registered consumer, and it marshals every attribute write onto the CHIP
+thread via `PlatformMgr().ScheduleWork()` rather than calling into Matter
+from this callback directly, per the architecture boundary in
 [architecture.md](architecture.md).
 
 ## Testing
