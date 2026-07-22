@@ -51,7 +51,9 @@ jobs:
           # any apt-get install triggers. Mask udevadm so it's a no-op.
           ln -sf /bin/true /usr/bin/udevadm
           apt-get update
-          apt-get install -y --no-install-recommends g++
+          # Zephyr's unit_testing platform links 32-bit (-m32) even on an
+          # x86_64 host, so the 64-bit-only g++ package isn't enough.
+          apt-get install -y --no-install-recommends g++ g++-multilib libc6-dev-i386
 
       - name: Run unit tests
         run: |
