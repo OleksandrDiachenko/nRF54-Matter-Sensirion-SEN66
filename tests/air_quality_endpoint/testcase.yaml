@@ -1,0 +1,4 @@
+tests:
+  air_quality_endpoint.policy:
+    tags: air_quality_endpoint
+    type: unit
