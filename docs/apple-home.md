@@ -61,6 +61,9 @@ project:
 | Short press | Restart BLE **SMP/DFU** advertising if `CONFIG_CHIP_DFU_OVER_BT_SMP` is enabled - a no-op here (`"Software update is disabled"`) whenever Wi-Fi is already connected, regardless of fabric state |
 | Hold ~6 s (3 s arm + 3 s cancel window) | Full factory reset: erases the fabric, Wi-Fi credentials, and all settings, then reboots |
 
+See [factory-reset.md](factory-reset.md) for the dedicated M7 verification
+pass with explicit acceptance criteria and results.
+
 ## Commissioning
 
 Attempt all three onboarding paths available from this firmware (they share
