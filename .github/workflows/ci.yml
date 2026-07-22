@@ -43,6 +43,11 @@ jobs:
           cd "$NCS_DIR"
           west update --narrow -o=--depth=1
 
+      - name: Install host C++ compiler
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends g++
+
       - name: Run unit tests
         run: |
           source "$NCS_DIR/zephyr/zephyr-env.sh"
