@@ -45,6 +45,11 @@ jobs:
 
       - name: Install host C++ compiler
         run: |
+          # The image ships a pending jlink package whose postinst calls
+          # `udevadm control --reload-rules`, which fails in a container
+          # with no running udev and aborts dpkg's --configure pass that
+          # any apt-get install triggers. Mask udevadm so it's a no-op.
+          ln -sf /bin/true /usr/bin/udevadm
           apt-get update
           apt-get install -y --no-install-recommends g++
 
