@@ -42,4 +42,11 @@ if(CONFIG_APP_SEN66_SHELL)
     )
 endif()
 
+if(CONFIG_APP_AIR_QUALITY_ENDPOINT)
+    target_sources(app PRIVATE
+        src/air_quality_endpoint/air_quality_policy.cpp
+        src/air_quality_endpoint/air_quality_matter_adapter.cpp
+    )
+endif()
+
 ncs_configure_data_model()

@@ -37,6 +37,15 @@ config APP_MEASUREMENT_SERVICE_STACK_SIZE
 	  driver. The driver performs blocking I2C calls and logging on this
 	  thread, so it needs headroom beyond a minimal work queue.
 
+config APP_AIR_QUALITY_ENDPOINT
+	bool "Enable the Matter air-quality sensor endpoint"
+	default y
+	depends on APP_MEASUREMENT_SERVICE
+	help
+	  Define endpoint 1 (Air Quality, Temperature/Humidity Measurement, and
+	  CO2/PM1/PM2.5/PM10 Concentration Measurement) and publish it from the
+	  measurement service's latest snapshot, marshaled onto the CHIP thread.
+
 source "$(ZEPHYR_CONNECTEDHOMEIP_MODULE_DIR)/config/nrfconnect/chip-module/Kconfig.features"
 source "$(ZEPHYR_CONNECTEDHOMEIP_MODULE_DIR)/config/nrfconnect/chip-module/Kconfig.defaults"
 source "$(ZEPHYR_NRF_MODULE_DIR)/samples/matter/common/src/Kconfig"
